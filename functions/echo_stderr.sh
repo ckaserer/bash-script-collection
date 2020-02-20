@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function echo_stderr () { 
-  echo "$@" 1>&2; 
+  >&2 echo "$@"
 }
 # readonly definition of a function throws an error if another function 
 # with the same name is defined a second time
