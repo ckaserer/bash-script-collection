@@ -30,13 +30,12 @@ usage_message () {
   ${PROG_NAME} is designed to be used as part of your CI/CD to push a docker image to dockerhub. 
       
   Usage:
-    ${PROG_NAME} --docker-org <DOCKER_ORGANIZATION> --docker-repo <DOCKER_REPO> --docker-user <DOCKER_USER> --docker-pass <DOCKER_PASS> [OPT ..]
+    ${PROG_NAME} --image <DOCKER_IMAGE> --username <USERNAME> --password <PASSWORD> [OPT ..]
       
       required
-        --docker-org)        ... target docker organization. This could be your username or an organization you have access to
-        --docker-repo)       ... target docker repository
-        --docker-user)       ... docker username with push privileges
-        --docker-pass)       ... docker password
+        --image)             ... image name to push to registry
+        --username)          ... docker username with push privileges
+        --password)          ... docker password
       
       optional
         --git-branch)        ... if git-branch is not set to 'master' the script will not push the image to dockerhub
@@ -51,17 +50,16 @@ readonly -f usage_message
 
 main () {
   # INITIAL VALUES
-  local docker_org=""
-  local docker_repo=""
-  local docker_user=""
-  local docker_pass=""
+  local image=""
+  local username=""
+  local password=""
 
   local allow_push_from="master"
   local git_branch="master"
   local flag_is_pull_request=false
 
   # GETOPT
-  local opts=`getopt -o dh --long dryrun,help,docker-org:,docker-repo:,docker-user:,docker-pass:,git-branch:,is-pull-request:,allow-push-from: -- "$@"`
+  local opts=`getopt -o dh --long dryrun,help,image:,username:,password:,git-branch:,is-pull-request:,allow-push-from: -- "$@"`
   if [ $? != 0 ]; then
     echo_stderr "failed to fetch options via getopt"
     exit 1
@@ -69,20 +67,16 @@ main () {
   eval set -- "${opts}"
   while true ; do
     case "${1}" in
-      --docker-org) 
-        docker_org=${2}
+      --image) 
+        image=${2}
         shift 2
         ;; 
-      --docker-repo) 
-        docker_repo=${2}
+      --username) 
+        username=${2}
         shift 2
         ;; 
-      --docker-user) 
-        docker_user=${2}
-        shift 2
-        ;; 
-      --docker-pass) 
-        docker_pass=${2}
+      --password) 
+        password=${2}
         shift 2
         ;; 
       --git-branch) 
@@ -133,13 +127,12 @@ main () {
   check_for_pull_request ${flag_is_pull_request}
 
   # if [ -z "$VAR" ]; This will return true if a variable is unset or set to the empty string ("").
-  if [ -z "${docker_org}" ] || [ -z "${docker_repo}" ] || [ -z "${docker_user}" ] || [ -z "${docker_pass}" ]; then
+  if [ -z "${image+x}" ] || [ -z "${username+x}" ] || [ -z "${password+x}" ]; then
       echo_stderr
       echo_stderr "please provide all required options"
-      echo_stderr "--docker-org  = ${docker_org}"
-      echo_stderr "--docker-repo = ${docker_repo}"
-      echo_stderr "--docker-user = ${docker_user}"
-      echo_stderr "--docker-pass = (hidden)"
+      echo_stderr "--image = ${image}"
+      echo_stderr "--username = ${username}"
+      echo_stderr "--password = (hidden)"
       echo_stderr
       usage_message
       return 1
@@ -149,8 +142,8 @@ main () {
   # CORE LOGIC
   
   if cmp_regex ${git_branch} ${allow_push_from}; then
-    docker_login ${docker_user} ${docker_pass}
-    execute "docker push ${docker_org}/${docker_repo}"
+    docker_login ${username} ${password}
+    execute "docker push ${image}"
   else
     echo "Info: branch '${git_branch}' did not meet the regex '${allow_push_from}'"
     echo "Info: no action taken"
