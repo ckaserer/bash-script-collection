@@ -61,7 +61,7 @@ main () {
   # GETOPT
   local opts=`getopt -o dh --long dryrun,help,image:,username:,password:,git-branch:,is-pull-request:,allow-push-from: -- "$@"`
   if [ $? != 0 ]; then
-    echo_stderr "failed to fetch options via getopt"
+    print_error "failed to fetch options via getopt"
     exit 1
   fi
   eval set -- "${opts}"
@@ -96,10 +96,10 @@ main () {
             flag_is_pull_request=false;
             ;;
           *) 
-            echo_stderr
-            echo_stderr "invalid parameter for --is-pull-request: \"${2}\""
-            echo_stderr "Allowed parameters are [0,1,true,false]\n"
-            echo_stderr
+            print_error
+            print_error "invalid parameter for --is-pull-request: \"${2}\""
+            print_error "Allowed parameters are [0,1,true,false]\n"
+            print_error
             usage_message
             exit 1
             ;;
@@ -128,12 +128,12 @@ main () {
 
   # if [ -z "$VAR" ]; This will return true if a variable is unset or set to the empty string ("").
   if [ -z "${image+x}" ] || [ -z "${username+x}" ] || [ -z "${password+x}" ]; then
-      echo_stderr
-      echo_stderr "please provide all required options"
-      echo_stderr "--image = ${image}"
-      echo_stderr "--username = ${username}"
-      echo_stderr "--password = (hidden)"
-      echo_stderr
+      print_error
+      print_error "please provide all required options"
+      print_error "--image = ${image}"
+      print_error "--username = ${username}"
+      print_error "--password = (hidden)"
+      print_error
       usage_message
       return 1
   fi
@@ -145,8 +145,8 @@ main () {
     docker_login ${username} ${password}
     execute "docker push ${image}"
   else
-    echo "Info: branch '${git_branch}' did not meet the regex '${allow_push_from}'"
-    echo "Info: no action taken"
+    print_info "branch '${git_branch}' did not meet the regex '${allow_push_from}'"
+    print_info "no action taken"
   fi
 }
  
